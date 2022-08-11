@@ -49,6 +49,7 @@ HC <-dplyr::select(Highest_Count, c(SUBJECT.ID, EC.Coded., EC.Child, EC.Experime
 View(HC)
 
 BG <-dplyr::select(Background_Info, c(SUBJECT.ID, How.often.does.the.primary.caregiver.use.ASL.with.the.child.,How.often.does.the.primary.caregiver.use.ASL.with.the.child., Does.your.child.have.regular.contact.with.any.additional.family.members.e.g..older.or.younger.siblings..grandparents..cousins..etc...who.use.ASL., Total.time.in.signing.program..mo., Caregiver.1.ASL., How.did.they.learn.ASL..Caregiver.1, Caregiver.2.ASL., How.did.they.learn.ASL..Caregiver.2, Please.estimate.how.much.of.the.language.directed.to.the.child.is.spoken.English.only..how.much.is.in.ASL.only..and.how.much.is.a.signed..spoken.mixture., Please.estimate.which.language.is.MOST.used.in.various.settings., Hearing.Status.Caregiver.1, Hearing.Status.Caregiver.2))
+
 View(BG)
 
 # Add highest count and background info to GiveN
@@ -145,6 +146,7 @@ with(GiveN_subset, wilcox.test(Age ~ Language_Modality))
 
 Later_Only <- subset(GiveN_subset, Language_Timing = "Later")
 with(Later_Only, wilcox.test(Age.of.Exposure..mo.~ Language_Modality))
+
 ```
 
 ## Other Demographic info
@@ -187,7 +189,6 @@ with(ASLLater_ASL, table(Hearing.Status.Caregiver.2, useNA="ifany"))
 
 
 # Research Question Tables / Figures
-
 ## Count/prop. of kids who are CP/NON-CP knowers, by Language Timing & Modality
 ```{r}
 table(GiveN_subset$GN_sm_2cat, GiveN_subset$Language_Timing)
