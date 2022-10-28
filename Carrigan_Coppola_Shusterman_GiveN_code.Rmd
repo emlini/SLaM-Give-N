@@ -142,10 +142,24 @@ with(GiveN_subset, cor.test(SES..8.66., as.numeric(Language_Modality)))
 with(GiveN_subset, wilcox.test(SES..8.66. ~ Language_Modality))
 
 with(GiveN_subset, cor.test(Age, as.numeric(Language_Modality)))
-with(GiveN_subset, wilcox.test(Age ~ Language_Modality))
+with(GiveN_subset, wilcox.test(Age ~ Language_Modality)) # Age is significantly related to Language Modality, ASL kids older
+jitter <- position_jitter(width=0, height=0.075) # Making overlapping points more visible
 
-Later_Only <- subset(GiveN_subset, Language_Timing = "Later")
+ggplot(data=GiveN_subset, mapping = aes(x=Language_Modality, y=Age)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=Age, color=Age), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Age (Years") 
+
+
+
+Later_Only <- subset(GiveN_subset, Language_Timing == "Later")
 with(Later_Only, wilcox.test(Age.of.Exposure..mo.~ Language_Modality))
+
+with(Later_Only, wilcox.test(Age ~ Language_Modality)) # Age is significantly related to Language Modality, ASL kids older
+ggplot(data=Later_Only, mapping = aes(x=Language_Modality, y=Age)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=Age, color=Age), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Age (Years") 
+
+Early_Only <- subset(GiveN_subset, Language_Timing == "Early")
+view(Early_Only)
+with(Early_Only, wilcox.test(Age ~ Language_Modality)) # Age is significantly related to Language Modality, ASL kids older
+ggplot(data=Early_Only, mapping = aes(x=Language_Modality, y=Age)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=Age, color=Age), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Age (Years") 
+
 
 ```
 
@@ -157,7 +171,7 @@ View(EngLater)
 with(EngLater, table(Hearing.Status.Caregiver.1, useNA="ifany"))
 with(EngLater, table(Hearing.Status.Caregiver.2, useNA="ifany"))
 with(EngLater, table(Please.estimate.which.language.is.MOST.used.in.various.settings., useNA="ifany"))
-with(EngLater, table(Please.estimate.how.much.of.the.language.directed.to.the.child.is.spoken.English.only..how.much.is.in.ASL.only..and.how.much.is.a.signed..spoken.mixture., useNA="ifany")
+with(EngLater, table(Please.estimate.how.much.of.the.language.directed.to.the.child.is.spoken.English.only..how.much.is.in.ASL.only..and.how.much.is.a.signed..spoken.mixture., useNA="ifany"))
 
 with(EngLater, table(Caregiver.1.ASL., Caregiver.2.ASL., useNA="ifany"))
 EngLater_ASL <-subset(EngLater, Caregiver.1.ASL.  == "Yes" | Caregiver.2.ASL. == "Yes")
@@ -198,6 +212,65 @@ table(GiveN_subset$GN_sm_2cat, GiveN_subset$Language_Modality)
 prop.table(table(GiveN_subset$GN_sm_2cat, GiveN_subset$Language_Modality), margin=2)#proportions calculated summing across columns
 ```
 
+## Highest count versus Give-N, Timing, & Modality
+```{r}
+# Note that highest count is censored at 20, Give-N at 16
+GN_HC <- ggplot(data=GiveN_subset, aes(x=MAX_COUNT_SEQ, y=GN_All_Ceiling, shape=Language_Timing, color=Language_Timing)) + geom_jitter(na.rm=TRUE) + geom_smooth(method=loess, se = FALSE) + labs(x="Highest Count", y="Give-N highest value correct") + theme(plot.title = element_text(hjust = 0.5), legend.position = c(0.82, 0.15)) + scale_shape_manual(name="Language\nTiming", values=c(17, 16), labels=c("Early (68)", "Later (48)")) + scale_color_manual(name="Language\nTiming", values=c("deepskyblue3", "firebrick3"), labels=c("Early (68)", "Later (48)"))
+GN_HC
+
+
+
+with(GiveN_subset, cor.test(GN_All_Ceiling, MAX_COUNT_SEQ, method = "kendall")) #GN sig related to highest count
+
+with(GiveN_subset, wilcox.test(MAX_COUNT_SEQ ~ GN_sm_2cat)) # Highest count is related to CP-knower status
+
+with(GiveN_subset, wilcox.test(MAX_COUNT_SEQ ~ Language_Timing)) # Highest count is NOT significantly related to Language Timing
+
+with(GiveN_subset, wilcox.test(MAX_COUNT_SEQ ~ Language_Modality)) # Highest count is also NOT significantly related to Language Modality
+
+
+ggplot(data=GiveN_subset, mapping = aes(x=Language_Timing, y=MAX_COUNT_SEQ)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Highest Count") 
+
+ggplot(data=GiveN_subset, mapping = aes(x=Language_Modality, y=MAX_COUNT_SEQ)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Highest Count")   
+
+
+table(GiveN_subset$MAX_COUNT_SEQ)
+
+
+# Seeing whether HC is related to other variables for kids not at ceiling on HC
+GiveN_HCnoCeiling <- subset(GiveN_subset, MAX_COUNT_SEQ < 20)
+View(GiveN_HCnoCeiling)
+
+with(GiveN_HCnoCeiling, cor.test(GN_All_Ceiling, MAX_COUNT_SEQ, method = "kendall")) #GN sig related to highest count
+
+with(GiveN_HCnoCeiling, wilcox.test(MAX_COUNT_SEQ ~ GN_sm_2cat)) # Highest count is related to CP-knower status
+
+with(GiveN_HCnoCeiling, wilcox.test(MAX_COUNT_SEQ ~ Language_Timing)) # Highest count is NOT significantly related to Language Timing
+
+with(GiveN_HCnoCeiling, wilcox.test(MAX_COUNT_SEQ ~ Language_Modality)) # Highest count is significantly related to Language Modality (when exclude kids at ceiling) -  but ASL kids are significantly older than English kids
+
+
+ggplot(data=GiveN_HCnoCeiling, mapping = aes(x=Language_Timing, y=MAX_COUNT_SEQ)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Highest Count") 
+
+
+ggplot(data=GiveN_HCnoCeiling, mapping = aes(x=Group_4cat, y=MAX_COUNT_SEQ)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Highest Count")   # This shows English learning kids count higher
+
+# but are they also older within this subset of kids not at ceiling?
+
+with(GiveN_HCnoCeiling, wilcox.test(Age ~ Language_Timing)) # Age not related to timing in this subset
+ggplot(data=GiveN_HCnoCeiling, mapping = aes(x=Language_Timing, y=Age)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Age")   # This shows English learning kids count higher
+
+
+with(GiveN_HCnoCeiling, wilcox.test(Age ~ Language_Modality)) # Highest count is significantly related to Language Modality (when exclude kids at ceiling) -  English group is counting higher, but ASL kids are significantly older
+
+ggplot(data=GiveN_HCnoCeiling, mapping = aes(x=Language_Modality, y=MAX_COUNT_SEQ)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Timing") + ylab("Highest Count")   
+
+
+ggplot(data=GiveN_HCnoCeiling, mapping = aes(x=Language_Modality, y=Age)) + geom_boxplot() + geom_dotplot(mapping=aes(fill=GN_sm_2cat, color=GN_sm_2cat), method = "dotdensity", binaxis = "y", position = jitter, stackdir = "center", dotsize=0.5, stackratio = 1.25) + theme(text = element_text(size=11))  + xlab("Language Modality") + ylab("Age")   
+
+
+
+```
 
 
 ## Figure 2: BEESWARM BOXPLOT FOR GN-2-cat (CP/Non) w/dot colors by Language Timing & Language Modality
@@ -257,6 +330,8 @@ chisq.test(table(GN_early$GN_sm_2cat, GN_early$Language_Modality))
 
 ## GIVE-N QUANTITIES 1-6, 2-CATEGORY (CP-knowers and NOT CP-knowers) - LOGISTIC REGRESSION
 ```{r}
+GiveN_subset <- subset(GiveN_subset, GiveN_subset$MAX_COUNT_SEQ!='')
+
 null <-glm(formula = GN_sm_2cat ~ 1, data = GiveN_subset, family = "binomial")
 summary(null) #resid dev: 210.07   AIC 212.07
 
@@ -285,9 +360,14 @@ w <- glm(formula = GN_sm_2cat ~ SES..8.66.+ Language_Modality + Age, data = Give
 summary(w) # residual deviance: 166.75  AIC: 174.75
 lmtest::lrtest(j, w) # model without Language Timing IS significantly different from model with Language Timing (combined with AIC and residual deviance, model WITH Language Timing fits data better)
 
+hc <- glm(formula = GN_sm_2cat ~ SES..8.66.+ Language_Modality + Age + Language_Timing + MAX_COUNT_SEQ, data = GiveN_subset, family = "binomial") #model without Language Timing
+summary(hc) # residual deviance: 138.14  AIC: 150.14
+lmtest::lrtest(j, hc) # model adding Highest Count IS significantly different from model without this variable (combined with AIC and residual deviance, model WITH Highest Count fits data better)
+
+#Timing is highly correlated with HC, so this makes sense
 
 
-#MODEL DIAGNOSTICS for Model j
+#MODEL DIAGNOSTICS for Model hc
 # from http://www.sthda.com/english/articles/36-classification-methods-essentials/148-logistic-regression-assumptions-and-diagnostics-in-r/ (this uses dplyr functions that are "retired"--gather()--so I've modified below)
 
 #Step 1: Checking that continuous predictors ARE in fact linearly associated with logit of the outcome
@@ -298,9 +378,7 @@ continuous_pred <- GiveN_subset %>%
 predictors <- colnames(continuous_pred)
 
 #get the predicted probabilities for EACH KID in the whole model (based on their specific values of each predictor)
-probabilities <- data.frame(predict(j, type = "response"))
-
-##**1/28/21 NEED TO FIX COLNAME AND ERROR: "Column `logit` must be length 1 (the group size), not 176"**
+probabilities <- data.frame(predict(hc, type = "response"))
 
 # Bind the logit and tidying the data for plot
 continuous_pred <- continuous_pred %>%
@@ -317,30 +395,30 @@ ggplot(continuous_pred, aes(logit, predictor.value))+
 
 
 # Step 2: Checking for "INFLUENTIAL VALUES" - extreme data points
-plot(j, which = 4, id.n = 3)
+plot(hc, which = 4, id.n = 3)
 
 # Extract model results
-j.data <- augment(j) %>% 
+hc.data <- augment(hc) %>% 
   mutate(index = 1:n()) 
 
-j.data %>% top_n(3, .cooksd)
+hc.data %>% top_n(3, .cooksd)
 
-ggplot(j.data, aes(index, .std.resid)) + 
+ggplot(hc.data, aes(index, .std.resid)) + 
   geom_point(aes(color = GN_sm_2cat), alpha = .5) +
   theme_bw()
 
-j.data %>% 
+hc.data %>% 
   filter(abs(.std.resid) > 3)
 #NO INFLUENTIAL OBSERVATIONS IN DATA
 
 
 ##Step 3: Check for Multicollinearity
-car::vif(j)  ##None! (bc values not >5 or 10)
+car::vif(hc)  ##None! (bc values not >5 or 10)
 
 # WE HAVE A GOOD MODEL, FOLKS!
 
 #Output Model J
-stargazer(j, title = "Logistic Regression Results", align=TRUE, dep.var.labels=c("CP-Knower Status"), covariate.labels=c("Socioeconomic Status (SES)", "Language Modality (ASL)", "Age (Years)", "Timing of Language Exposure (Early)"), single.row=TRUE, keep.stat=c("n", "aic"),  out= "GN_CPknowerbinary_SES_Modality_Age_Timing_200514.htm")
+stargazer(hc, title = "Logistic Regression Results", align=TRUE, dep.var.labels=c("CP-Knower Status"), covariate.labels=c("Socioeconomic Status (SES)", "Language Modality (ASL)", "Age (Years)", "Timing of Language Exposure (Early)", "Highest Count"), single.row=TRUE, keep.stat=c("n", "aic"),  out= "GN_CPknowerbinary_SES_Modality_Age_Timing_HC_220901.htm")
 ```           
 
 
