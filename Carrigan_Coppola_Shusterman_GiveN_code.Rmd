@@ -9,7 +9,7 @@ output:
 # Data Importation & Prep
 
 ## Load required packages
-```{r echo=TRUE, results='hide'}
+```{r setup echo=TRUE, results='hide'}
 library(tidyverse) 
 library(ggplot2)
 library(colorspace)
@@ -31,7 +31,7 @@ library(forcats)
 
 ## Set working directory (this should be wherever your file is saved) & Import data file
 ```{r echo=FALSE, results='hide'}
-#setwd("") #if necessary
+setwd("C:/Users/jmhen/Documents/Give-N_Data") #if necessary
 GiveN <- read.csv("GN_Smsummary_Lgall_KW_201106.csv", na.strings = c("N/A", "I/R", "", "TBD", "N/R"))
 View(GiveN)
 Highest_Count <- read.csv("MASTER_Coding_EC_201105.csv", na.strings = c("N/A"))
@@ -290,7 +290,7 @@ ggarrange(a, b, ncol=2, nrow=1, common.legend = TRUE, labels="auto")
 
 ## FIGURE 3: SCATTERPLOTS of proportion correct values on GIVE-N Quantities 7, 9, 10, 12, 16 by Age (years), separated by Language Timing & Language Modality
 ```{r}
-GN_lg_noNA <- subset(GiveN_subset, GiveN_subset$GN_Lg_propcorr_NA!='' & GiveN_subset$GN_sm_2cat!="NOT CP-knower")
+GN_lg_noNA <- subset(GiveN_subset, GiveN_subset$GN_Lg_propcorr_NA!='' & GiveN_subset$GN_sm_2cat!="NOT CP-knower" & GiveN_subset$MAX_COUNT_SEQ!='')
 summary(GN_lg_noNA$Language_Timing)
 table(GN_lg_noNA$Language_Timing, GN_lg_noNA$GN_Lg_propcorr_NA, useNA = "always")
 
@@ -332,10 +332,10 @@ chisq.test(table(GN_early$GN_sm_2cat, GN_early$Language_Modality))
 ```{r}
 GiveN_subset <- subset(GiveN_subset, GiveN_subset$MAX_COUNT_SEQ!='')
 
-null <-glm(formula = GN_sm_2cat ~ 1, data = GiveN_subset, family = "binomial")
+null <-glm(formula = GN_sm_2cat ~ 1, data = GiveN_subset, family = binomial)
 summary(null) #resid dev: 210.07   AIC 212.07
 
-j <- glm(formula = GN_sm_2cat ~ SES..8.66. + Language_Modality + Age + Language_Timing, data = GiveN_subset, family = "binomial")
+j <- glm(formula = GN_sm_2cat ~ SES..8.66. + Language_Modality + Age + Language_Timing, data = GiveN_subset, family = binomial)
 summary(j) #resid dev: 162.72   AIC 172.72
 ##Age & Timing sig., Modality & SES not.
 exp(coef(j)) #ODDS RATIOS
@@ -348,19 +348,19 @@ with(j, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FAL
 #Model j fits sig. better than a null model, p<.001
 
 #TESTING OTHER POSSIBLE MODELS
-k <- glm(formula = GN_sm_2cat ~ SES..8.66. + Language_Modality + Age*Language_Timing, data = GiveN_subset, family = "binomial")
+k <- glm(formula = GN_sm_2cat ~ SES..8.66. + Language_Modality + Age*Language_Timing, data = GiveN_subset, family = binomial)
 summary(k) #resid dev: 159.75   AIC 171.75  # Age only significant predictor
 lmtest::lrtest(j, k) # model with Age * Timing interaction not significantly different from model without the interaction
 
-h <- glm(formula = GN_sm_2cat ~ Language_Modality + Age + Language_Timing, data = GiveN_subset, family = "binomial") #model without SES
+h <- glm(formula = GN_sm_2cat ~ Language_Modality + Age + Language_Timing, data = GiveN_subset, family = binomial) #model without SES
 summary(h)  # residual deviance: 165.98  AIC: 173.98
 lmtest::lrtest(j, h) # model without SES not significantly different from model with SES
 
-w <- glm(formula = GN_sm_2cat ~ SES..8.66.+ Language_Modality + Age, data = GiveN_subset, family = "binomial") #model without Language Timing
+w <- glm(formula = GN_sm_2cat ~ SES..8.66.+ Language_Modality + Age, data = GiveN_subset, family = binomial) #model without Language Timing
 summary(w) # residual deviance: 166.75  AIC: 174.75
 lmtest::lrtest(j, w) # model without Language Timing IS significantly different from model with Language Timing (combined with AIC and residual deviance, model WITH Language Timing fits data better)
 
-hc <- glm(formula = GN_sm_2cat ~ SES..8.66.+ Language_Modality + Age + Language_Timing + MAX_COUNT_SEQ, data = GiveN_subset, family = "binomial") #model without Language Timing
+hc <- glm(formula = GN_sm_2cat ~ SES..8.66.+ Language_Modality + Age + Language_Timing + MAX_COUNT_SEQ, data = GiveN_subset, family = binomial) #model without Language Timing
 summary(hc) # residual deviance: 138.14  AIC: 150.14
 lmtest::lrtest(j, hc) # model adding Highest Count IS significantly different from model without this variable (combined with AIC and residual deviance, model WITH Highest Count fits data better)
 
@@ -439,21 +439,39 @@ Model *does not* include the 19 participants who were tested on large quantities
 
 GN_lg_noNA$GN_lg_factor <- as.factor(as.character(GN_lg_noNA$GN_Lg_propcorr_NA))
 
+
+
 GN_lg_null <- polr(formula = GN_lg_factor ~ 1, data = GN_lg_noNA,  method = "probit", Hess = TRUE) 
 summary(GN_lg_null) #res dev. 305  AIC: 315
 
-GN_lg_polr <- polr(formula = GN_lg_factor ~ SES..8.66. + Language_Modality + Age + Language_Timing, data = GN_lg_noNA,  method = "probit", Hess = TRUE) 
-summary(GN_lg_polr)  # res dev 265   AIC: 283
-tidy(GN_lg_polr, conf.int = TRUE, p.value=TRUE)
-dropterm(GN_lg_polr)
+#Without MAX_COUNT_SEQ
+GN_lg_polr_noHC <- polr(formula = GN_lg_factor ~ SES..8.66. + Language_Modality + Age + Language_Timing, data = GN_lg_noNA,  method = "probit", Hess = TRUE) 
+summary(GN_lg_polr_noHC)  # res dev 262   AIC: 280
+tidy(GN_lg_polr_noHC, conf.int = TRUE, p.value=TRUE)
+dropterm(GN_lg_polr_noHC)
 
-lipsitz.test(GN_lg_polr) #ns
-logitgof(GN_lg_noNA$GN_lg_factor, fitted(GN_lg_polr)) #ns
-pulkrob.chisq(GN_lg_polr, c("Language_Modality", "Language_Timing")) #ns
+lipsitz.test(GN_lg_polr_noHC) #ns
+logitgof(GN_lg_noNA$GN_lg_factor, fitted(GN_lg_polr_noHC)) #ns
+pulkrob.chisq(GN_lg_polr_noHC, c("Language_Modality", "Language_Timing")) #ns
+
+#With MAX_COUNT_SEQ
+GN_lg_polr_wHC <- polr(formula = GN_lg_factor ~ SES..8.66. + Language_Modality + Age + Language_Timing + MAX_COUNT_SEQ, data = GN_lg_noNA,  method = "probit", Hess = TRUE) 
+summary(GN_lg_polr_wHC)  # res dev 261   AIC: 281
+tidy(GN_lg_polr_wHC, conf.int = TRUE, p.value=TRUE)
+dropterm(GN_lg_polr_wHC)
+
+lipsitz.test(GN_lg_polr_wHC) #ns
+logitgof(GN_lg_noNA$GN_lg_factor, fitted(GN_lg_polr_wHC)) #ns
+pulkrob.chisq(GN_lg_polr_wHC, c("Language_Modality", "Language_Timing")) #ns
+
+#Comparing WITH vs WITHOUT HC models
+anova(GN_lg_polr_wHC,GN_lg_polr_noHC)
 
 ## checking RESIDUALS
+sres <- resids(GN_lg_polr_noHC)
 
-sres <- resids(GN_lg_polr)
+#NOT WORKING AS OF 12/27/2024
+
 
 p1 <- autoplot(sres, what = "qq", distribution = qnorm)
 p2 <- autoplot(sres, what = "covariate", x = GN_lg_noNA$SES..8.66., xlab = "SES") #bit of bunching at higher values but we know SES is skewed (also not variable of interest in this model)
